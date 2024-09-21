@@ -51,6 +51,38 @@ namespace AgData_Part1
             Console.WriteLine("Navpreet******************************");
         }
 
+        [Test] // POST request
+        public async Task TestPostAPI()
+        {
+            // Create a new post object 
+            var newPost = new
+            {
+                userId = 1,
+                title = "foo",
+                body = "bar"
+            };
+
+            // Convert the newPost object to JSON
+            string jsonContent = JsonConvert.SerializeObject(newPost);
+            StringContent content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
+
+            // Send a POST request to the /posts endpoint with the new post
+            HttpResponseMessage response = await _httpClient.PostAsync("posts", content);
+
+            // Assert that the status code is 201 Created
+            Assert.AreEqual(201, (int)response.StatusCode, "Expected status code 201");
+
+            // Read the response body as a string
+            string responseBody = await response.Content.ReadAsStringAsync();
+
+            // Assert that the response body contains the posted data
+            Assert.IsTrue(responseBody.Contains("foo"), "Response body does not contain the expected title");
+            Assert.IsTrue(responseBody.Contains("bar"), "Response body does not contain the expected body");
+
+            // Print the response body for debugging purposes (optional)
+            Console.WriteLine("Response Body: " + responseBody);
+        }
+
         [Test] // PUT request
         public async Task TestPutAPI() // This method must be marked as async and return Task
         {
@@ -112,6 +144,62 @@ namespace AgData_Part1
             }
         }
 
+        [Test] // DELETE request for deleting a post
+        public async Task TestDeletePost()
+        {
+            // Ensure _httpClient is not null
+            if (_httpClient == null)
+            {
+                Assert.Fail("HttpClient i snot initialized.");
+            }
+
+            // Define the Post id to delete
+            int postId = 1;
+
+            // Ensure postID is valid to prevent UriFormatException
+            if (postId <= 0)
+            {
+                Assert.Fail("Invalid postId.");
+            }
+
+            try
+            {
+                // Send a DELETE request
+                HttpResponseMessage response = await _httpClient.DeleteAsync($"posts/{postId}");
+
+                // Assert that the status code is 200 OK or 204 No Content *************************************
+                Assert.IsTrue(
+                    response.StatusCode == System.Net.HttpStatusCode.OK ||
+                    response.StatusCode == System.Net.HttpStatusCode.NoContent,
+                    "Expected status code 200 OK or 204 No Content");
+
+                // Check that the body is empty (No Content)
+                string responseBody = await response.Content.ReadAsStringAsync();
+               // Assert.IsTrue(string.IsNullOrEmpty(responseBody), "Response body is not empty after DELETE.");
+
+                // Print the response status and body 
+                Console.WriteLine($"Response Status: {response.StatusCode}");
+                Console.WriteLine("DELETE Response Body: " + responseBody);
+            }
+            catch (HttpRequestException ex)
+            {
+                Assert.Fail($"HttpRequestException: {ex.Message}");
+            }
+            catch (TaskCanceledException ex)
+            {
+                Assert.Fail($"TaskCanceledException: {ex.Message}");
+            }
+            catch (UriFormatException ex)
+            {
+                Assert.Fail($"UriFormatException: {ex.Message}");
+            }
+        }
+
+        [Test] // POST request to create new comment on a specific post
+       // public async Task TestPostComment()
+       // {
+       //
+       // }
 
         [TearDown]
         public void TearDown()
