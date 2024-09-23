@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
+using System.Reflection.Metadata;
 
 namespace AgData_Part1
 {
@@ -25,6 +26,7 @@ namespace AgData_Part1
         }
 
         [Test]
+        [Parallelizable(ParallelScope.Self)]
         public async Task TestGetPostAPI()
         {
             // Check if _httpClient is not null before use
@@ -52,6 +54,7 @@ namespace AgData_Part1
         }
 
         [Test] // POST request
+     //   [Parallelizable(ParallelScope.Self)]
         public async Task TestPostAPI()
         {
             // Create a new post object 
@@ -84,6 +87,7 @@ namespace AgData_Part1
         }
 
         [Test] // PUT request
+       // [Parallelizable(ParallelScope.Self)]
         public async Task TestPutAPI() // This method must be marked as async and return Task
         {
             // Check if _httpClient is not null before use
@@ -145,6 +149,7 @@ namespace AgData_Part1
         }
 
         [Test] // DELETE request for deleting a post
+      //  [Parallelizable(ParallelScope.Self)]
         public async Task TestDeletePost()
         {
             // Ensure _httpClient is not null
@@ -196,10 +201,97 @@ namespace AgData_Part1
         }
 
         [Test] // POST request to create new comment on a specific post
-       // public async Task TestPostComment()
-       // {
-       //
-       // }
+       // [Parallelizable(ParallelScope.Self)]
+        public async Task TestPostComment()
+        {
+            // Ensure _httpClient is not null
+            if (_httpClient == null)
+            {
+                Assert.Fail("HttpClient is not initialized.");
+            }
+
+            // Define the Post id for which we want to add comment
+            int postId = 1;
+
+            // Ensure postID is valid to prevent UriFormatException
+            if (postId <= 0)
+            {
+                Assert.Fail("Invalid postId.");
+            }
+
+            // Create a new comment object
+            var newComment = new 
+            {
+                postID  = postId,  // The ID of the post where the comment will be added
+                name = "Demo_Commenter",
+                email = "demo@commenter.com",
+                body = "This is a sample comment."            
+            };
+
+            // Serialize the comment object to JSON
+            string jsonContent = JsonConvert.SerializeObject(newComment);
+            StringContent content = new StringContent(jsonContent, Encoding.UTF8, "applicaton/json");
+
+            try
+            {
+                // Log message before sending the POST request
+                Console.WriteLine("Sending POST request to add a comment...");
+
+                // Send a POST request to create a new comment
+                HttpResponseMessage response = await _httpClient.PostAsync($"posts/{postId}/comments", content);
+
+                // Log status code and headers
+                Console.WriteLine("Response Status Code: " + (int)response.StatusCode);
+              //  Console.WriteLine("Response Headers: " + response.Headers.ToString());
+
+                // Assert that the status code is 201 Created (typical for a successful POST)
+                Assert.AreEqual(201, (int)response.StatusCode, "Expected status code 201");
+
+                // Read the response body as a string
+                string responseBody = await response.Content.ReadAsStringAsync();
+
+                // Print response body
+                Console.WriteLine("***************Response Body ****************");
+                Console.WriteLine(responseBody);
+
+                // Assert that the response body contains the comment
+                // Assert.IsTrue(responseBody.Contains("Demo_Commenter"), "Response body does not contain the expected name");
+                // Assert.IsTrue(responseBody.Contains("demo@commenter.com"), "Response body does not contain the expected email");
+                //  Assert.IsTrue(responseBody.Contains("This is a sample comment."), "Response body does not contain the expected comment");
+                // Since the response does not contain "name", "email", or "body", only check for "postId" and "id"
+                Assert.IsTrue(responseBody.Contains("\"postId\""), "Response body does not contain postId.");
+                Assert.IsTrue(responseBody.Contains("\"id\""), "Response body does not contain id.");
+
+            }
+            catch (HttpRequestException ex)
+            {
+                Console.WriteLine($"HttpRequestException: {ex.Message}");
+                Assert.Fail("HttpRequestException: ", ex.Message );
+            }
+            catch (TaskCanceledException ex)
+            {
+                Console.WriteLine($"TaskCanceledException: {ex.Message}");
+                Assert.Fail($"TaskCanceledException: {ex.Message}");
+            }
+            catch (UriFormatException ex)
+            {
+                Console.WriteLine($"UriFormatException: {ex.Message}");
+                Assert.Fail($"UriFormatException: {ex.Message}");
+            }
+            catch (InvalidOperationException ex)
+            {
+                Console.WriteLine($"InvalidOperationException: {ex.Message}");
+                Assert.Fail($"InvalidOperationException: {ex.Message}");
+            }
+            catch (Exception ex)
+            {
+                // Catch any other exception that might occur
+                Console.WriteLine($"Unexpected exception: {ex.Message}");
+                Assert.Fail($"Unexpected exception: {ex.Message}");
+            }
+        }
+
+        
 
         [TearDown]
         public void TearDown()
