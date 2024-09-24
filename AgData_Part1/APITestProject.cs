@@ -27,7 +27,7 @@ namespace AgData_Part1
 
         [Test]
         [Parallelizable(ParallelScope.Self)]
-        public async Task TestGetPostAPI()
+        public async Task TestGetPostAPI()  // Test to GET all Posts
         {
             // Check if _httpClient is not null before use
             if (_httpClient == null)
@@ -54,15 +54,18 @@ namespace AgData_Part1
         }
 
         [Test] // POST request
-     //   [Parallelizable(ParallelScope.Self)]
-        public async Task TestPostAPI()
+        // [Parallelizable(ParallelScope.Self)]
+        [TestCase(1, "Demo1", "DemoBody1")]
+        [TestCase(2, "Demo2", "DemoBody2")]
+        [TestCase(3, "Demo3", "DemoBody3")]
+        public async Task TestPostAPI(int userId, String title, String body)
         {
             // Create a new post object 
             var newPost = new
             {
-                userId = 1,
-                title = "foo",
-                body = "bar"
+               userId = userId,
+               title = title,
+               body = body
             };
 
             // Convert the newPost object to JSON
@@ -79,25 +82,25 @@ namespace AgData_Part1
             string responseBody = await response.Content.ReadAsStringAsync();
 
             // Assert that the response body contains the posted data
-            Assert.IsTrue(responseBody.Contains("foo"), "Response body does not contain the expected title");
-            Assert.IsTrue(responseBody.Contains("bar"), "Response body does not contain the expected body");
+            Assert.IsTrue(responseBody.Contains(title), "Response body does not contain the expected title");
+            Assert.IsTrue(responseBody.Contains(body), "Response body does not contain the expected body");
 
             // Print the response body for debugging purposes (optional)
             Console.WriteLine("Response Body: " + responseBody);
         }
 
         [Test] // PUT request
-       // [Parallelizable(ParallelScope.Self)]
-        public async Task TestPutAPI() // This method must be marked as async and return Task
+        //[Parallelizable(ParallelScope.Self)]
+        [TestCase(5, 7, "TitleForPutRequest", "BodyForPutRequest")]
+        
+        public async Task TestPutAPI(int postId, int userId, String title, String body) // This method must be marked as async and return Task
         {
             // Check if _httpClient is not null before use
             if (_httpClient == null)
             {
                 Assert.Fail("HttpClient is not initialized.");
             }
-            // Define postId to update
-            int postId = 1;
-
+           
             // Ensure postId is valid to prevent UriFormatException
             if (postId <= 0)
             {
@@ -107,9 +110,9 @@ namespace AgData_Part1
             // New data to update the post
             var updatedPost = new
             {
-                userId = 1,    // userId typically remains the same
-                title = "Updated title",
-                body = "Updated body"
+                userId = userId,
+                title = title,
+                body = body
             };
             // Serialize the updated post data to JSON
             string jsonContent = JsonConvert.SerializeObject(updatedPost);
@@ -125,8 +128,8 @@ namespace AgData_Part1
 
                 string responseBody = await response.Content.ReadAsStringAsync();
 
-                Assert.IsTrue(responseBody.Contains("Updated title"), "Response body does not contain the updated title");
-                Assert.IsTrue(responseBody.Contains("Updated body"), "Response body does not contain the updated body");
+                Assert.IsTrue(responseBody.Contains(title), "Response body does not contain the updated title");
+                Assert.IsTrue(responseBody.Contains(body), "Response body does not contain the updated body");
 
                 Console.WriteLine("Updated Post Response Body: " + responseBody);
             }
@@ -149,17 +152,15 @@ namespace AgData_Part1
         }
 
         [Test] // DELETE request for deleting a post
-      //  [Parallelizable(ParallelScope.Self)]
-        public async Task TestDeletePost()
+        //[Parallelizable(ParallelScope.Self)]
+        [TestCase(9)]
+        public async Task TestDeletePost(int postId)
         {
             // Ensure _httpClient is not null
             if (_httpClient == null)
             {
-                Assert.Fail("HttpClient i snot initialized.");
+                Assert.Fail("HttpClient is not initialized.");
             }
-
-            // Define the Post id to delete
-            int postId = 1;
 
             // Ensure postID is valid to prevent UriFormatException
             if (postId <= 0)
@@ -172,7 +173,7 @@ namespace AgData_Part1
                 // Send a DELETE request
                 HttpResponseMessage response = await _httpClient.DeleteAsync($"posts/{postId}");
 
-                // Assert that the status code is 200 OK or 204 No Content *************************************
+                // Assert that the status code is 200 OK or 204 No Content ****************************
                 Assert.IsTrue(
                     response.StatusCode == System.Net.HttpStatusCode.OK ||
                     response.StatusCode == System.Net.HttpStatusCode.NoContent,
@@ -180,7 +181,7 @@ namespace AgData_Part1
 
                 // Check that the body is empty (No Content)
                 string responseBody = await response.Content.ReadAsStringAsync();
-               // Assert.IsTrue(string.IsNullOrEmpty(responseBody), "Response body is not empty after DELETE.");
+              // Assert.IsTrue(string.IsNullOrEmpty(responseBody), "Response body is not empty after DELETE.");
 
                 // Print the response status and body 
                 Console.WriteLine($"Response Status: {response.StatusCode}");
@@ -201,17 +202,15 @@ namespace AgData_Part1
         }
 
         [Test] // POST request to create new comment on a specific post
-       // [Parallelizable(ParallelScope.Self)]
-        public async Task TestPostComment()
+               // [Parallelizable(ParallelScope.Self)]
+        [TestCase(10, "Demo_Commenter", "demo@commenter.com", "This is a sample comment from Navpreet.")]
+        public async Task TestPostComment(int postId, String name, String email, String body)
         {
             // Ensure _httpClient is not null
             if (_httpClient == null)
             {
                 Assert.Fail("HttpClient is not initialized.");
             }
-
-            // Define the Post id for which we want to add comment
-            int postId = 1;
 
             // Ensure postID is valid to prevent UriFormatException
             if (postId <= 0)
@@ -223,9 +222,9 @@ namespace AgData_Part1
             var newComment = new 
             {
                 postID  = postId,  // The ID of the post where the comment will be added
-                name = "Demo_Commenter",
-                email = "demo@commenter.com",
-                body = "This is a sample comment."            
+                Name = name,
+                Email = email,
+                Body = body            
             };
 
             // Serialize the comment object to JSON
@@ -255,10 +254,10 @@ namespace AgData_Part1
                 Console.WriteLine(responseBody);
 
                 // Assert that the response body contains the comment
-                // Assert.IsTrue(responseBody.Contains("Demo_Commenter"), "Response body does not contain the expected name");
-                // Assert.IsTrue(responseBody.Contains("demo@commenter.com"), "Response body does not contain the expected email");
-                //  Assert.IsTrue(responseBody.Contains("This is a sample comment."), "Response body does not contain the expected comment");
-                // Since the response does not contain "name", "email", or "body", only check for "postId" and "id"
+               // Assert.IsTrue(responseBody.Contains("Demo_Commenter"), "Response body does not contain the expected name");
+                //Assert.IsTrue(responseBody.Contains("demo@commenter.com"), "Response body does not contain the expected email");
+               // Assert.IsTrue(responseBody.Contains("This is a sample comment."), "Response body does not contain the expected comment");
+                //Since its mock API, response does not contain "name", "email", or "body", only check for "postId" and "id"
                 Assert.IsTrue(responseBody.Contains("\"postId\""), "Response body does not contain postId.");
                 Assert.IsTrue(responseBody.Contains("\"id\""), "Response body does not contain id.");
 
@@ -291,7 +290,77 @@ namespace AgData_Part1
             }
         }
 
-        
+        [Test] // Test to GET postid
+               // [Parallelizable(ParallelScope.Self)]
+        [TestCase(2)]
+        public async Task TestGetCommentsForPostID(int postId)
+        {
+            // Check if _httpClient is not null before use
+            if (_httpClient == null)
+            {
+                Assert.Fail("HttpClient is not initialized.");
+            }
+
+            // Ensure postId is valid
+            if (postId <= 0)
+            {
+                Assert.Fail("Invalid postId.");
+            }
+
+            try
+            {
+                // Log message before sending the GET request
+                Console.WriteLine("Sending GET request to retrieve comments for postId", postId, "...");
+
+                // Send a GET request to retrieve comments for the specified post
+                HttpResponseMessage response = await _httpClient.GetAsync($"comments?postId={postId}");
+
+                // Log status code and headers
+                Console.WriteLine("Response Status Code: " + (int)response.StatusCode);
+                Console.WriteLine("Response Headers: " + response.Headers.ToString());
+
+                //Assert that the status code is 200 OK
+                Assert.AreEqual(200, (int)response.StatusCode, "Expected status code 200");
+
+                // Read the response body as a string
+                String responseBody = await response.Content.ReadAsStringAsync();
+
+                Console.WriteLine("********************* Response Body for TestGetCommentsForPostID ***********");
+                Console.WriteLine(responseBody);
+
+                // check if the response contains "postId" and is not empty
+                Assert.IsTrue(responseBody.Contains("\"postId\":"), "Response body does not contain postId.");
+                Assert.IsNotEmpty(responseBody, "Response body is empty.");
+            }
+
+            catch (HttpRequestException ex)
+            {
+                Console.WriteLine($"HttpRequestException: {ex.Message}");
+                Assert.Fail($"HttpRequestException: {ex.Message}");
+            }
+            catch (TaskCanceledException ex)
+            {
+                Console.WriteLine($"TaskCanceledException: {ex.Message}");
+                Assert.Fail($"TaskCanceledException: {ex.Message}");
+            }
+            catch (InvalidOperationException ex)
+            {
+                Console.WriteLine($"InvalidOperationException: {ex.Message}");
+                Assert.Fail($"InvalidOperationException: {ex.Message}");
+            }
+            catch (UriFormatException ex)
+            {
+                Console.WriteLine($"UriFormatException: {ex.Message}");
+                Assert.Fail($"UriFormatException: {ex.Message}");
+            }
+            catch (Exception ex)
+            {
+                // Catch any other exception that might occur
+                Console.WriteLine($"Unexpected exception: {ex.Message}");
+                Assert.Fail($"Unexpected exception: {ex.Message}");
+            }
+        }
+
 
         [TearDown]
         public void TearDown()
