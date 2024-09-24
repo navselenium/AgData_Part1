@@ -92,7 +92,7 @@ namespace AgData_Part1
         [Test] // PUT request
         //[Parallelizable(ParallelScope.Self)]
         [TestCase(5, 7, "TitleForPutRequest", "BodyForPutRequest")]
-        
+        [Repeat(5)]  // This test will run 5 times
         public async Task TestPutAPI(int postId, int userId, String title, String body) // This method must be marked as async and return Task
         {
             // Check if _httpClient is not null before use
@@ -204,6 +204,7 @@ namespace AgData_Part1
         [Test] // POST request to create new comment on a specific post
                // [Parallelizable(ParallelScope.Self)]
         [TestCase(10, "Demo_Commenter", "demo@commenter.com", "This is a sample comment from Navpreet.")]
+        [Repeat(7)]  // This test will run 7 times
         public async Task TestPostComment(int postId, String name, String email, String body)
         {
             // Ensure _httpClient is not null
