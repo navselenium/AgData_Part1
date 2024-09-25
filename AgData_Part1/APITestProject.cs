@@ -181,8 +181,7 @@ namespace AgData_Part1
 
                 // Check that the body is empty (No Content)
                 string responseBody = await response.Content.ReadAsStringAsync();
-              // Assert.IsTrue(string.IsNullOrEmpty(responseBody), "Response body is not empty after DELETE.");
-
+              
                 // Print the response status and body 
                 Console.WriteLine($"Response Status: {response.StatusCode}");
                 Console.WriteLine("DELETE Response Body: " + responseBody);
